@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Q-Sense | My Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
      
         .dashboard-container {
@@ -174,16 +174,34 @@
             </div>
 
             <div class="dashboard-card">
-                <h2 style="margin-bottom: 20px;">Upcoming Reservations</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📅</span> Upcoming Reservations
+                    </h2>
+                    <span id="upcoming-count" style="background: #eef5fb; color: #3178c6; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;">0 Active</span>
+                </div>
                 
                 <div id="reservations-list">
                     <div class="empty-state">Loading your schedule...</div>
                 </div>
             </div>
+
+            <div class="dashboard-card" style="margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>🍽️</span> Completed Reservations
+                    </h2>
+                    <span id="completed-count" style="background: #f1f5f9; color: #475569; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;">0 Past</span>
+                </div>
+                
+                <div id="completed-reservations-list">
+                    <div class="empty-state">Loading your dining history...</div>
+                </div>
+            </div>
         </section>
     </main>
 
-    <div id="qsense-chatbot" style="position: fixed; right: 22px; bottom: 22px; z-index: 9999; font-family: var(--font-sans);">
+    <div id="qsense-chatbot" style="position: fixed; right: 22px; bottom: 22px; z-index: 9999; font-family: 'Inter', sans-serif;">
         <button id="chatbot-toggle" type="button" style="width: 64px; height: 64px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3178c6, #245ea3); color: white; font-size: 28px; box-shadow: 0 12px 30px rgba(49,120,198,0.35); cursor: pointer;">💬</button>
         <div id="chatbot-panel" style="display: none; width: 340px; max-width: calc(100vw - 24px); background: white; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.14); border: 1px solid #e7edf3; overflow: hidden; margin-bottom: 12px;">
             <div style="padding: 14px 16px; background: #3178c6; color: white; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
@@ -204,23 +222,6 @@
         <p>&copy; 2026 Q-Sense Inc. &bull; <a href="#">Privacy</a> &bull; <a href="#">Terms</a></p>
     </footer>
 
-   <script src="js/api.js"></script>
-    <script>
-        async function cancelReservation(reserveId, button) {
-            if (!confirm('Cancel this reservation?')) return;
-            button.disabled = true;
-            try {
-                await customerFetch(`/reservations/${reserveId}`, { method: 'DELETE' });
-                button.closest('.reservation-item').remove();
-                toast('Reservation cancelled.', 'success');
-                const list = document.getElementById('reservations-list');
-                if (!list.children.length) list.innerHTML = '<div class="empty-state">You have no upcoming reservations.</div>';
-            } catch (error) {
-                button.disabled = false;
-                toast(error.message, 'error');
-            }
-        }
-    </script>
    <script>
 const profileToggle = document.getElementById('profileToggle');
         const profileDropdown = document.getElementById('profileDropdown');
@@ -269,7 +270,7 @@ const profileToggle = document.getElementById('profileToggle');
    
         try {
          
-            const userRes = await fetch(`http://localhost:5000/api/users/${customerId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` } });
+            const userRes = await fetch(`http://localhost:5000/api/users/${customerId}`);
             
           
             if (!userRes.ok) {
@@ -287,37 +288,85 @@ const profileToggle = document.getElementById('profileToggle');
 
             
             const resList = document.getElementById("reservations-list");
-            const revRes = await fetch(`http://localhost:5000/api/reservations/user/${customerId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` } });
+            const completedList = document.getElementById("completed-reservations-list");
+            const upcomingCountBadge = document.getElementById("upcoming-count");
+            const completedCountBadge = document.getElementById("completed-count");
+
+            const revRes = await fetch(`http://localhost:5000/api/reservations/user/${customerId}`);
             
             if(revRes.ok) {
-                const reservations = await revRes.json();
- 
-                resList.innerHTML = ""; 
+                const data = await revRes.json();
+                console.log("My Reservations Data:", data);
 
-                if (reservations.length === 0) {
-                    resList.innerHTML = `<div class="empty-state">You have no upcoming reservations.</div>`;
+                // Handle both unified { upcoming, completed } object and fallback array
+                const upcoming = data.upcoming || (Array.isArray(data) ? data.filter(r => r.status === 'reserved') : []);
+                const completed = data.completed || (Array.isArray(data) ? data.filter(r => r.status !== 'reserved') : []);
+
+                // 1. Render Upcoming Reservations
+                if (upcomingCountBadge) upcomingCountBadge.textContent = `${upcoming.length} Active`;
+                resList.innerHTML = "";
+
+                if (upcoming.length === 0) {
+                    resList.innerHTML = `
+                        <div class="empty-state">
+                            <p style="margin: 0 0 10px 0;">You have no active upcoming reservations.</p>
+                            <a href="CustomerReservation.html" style="color: #3178c6; font-weight: 600; text-decoration: none;">📅 Book a table now &rarr;</a>
+                        </div>`;
                 } else {
-                    reservations.forEach(res => {
+                    upcoming.forEach(res => {
                         const item = document.createElement("div");
                         item.className = "reservation-item";
+                        item.style.borderLeft = "4px solid #3178c6";
                         item.innerHTML = `
-                            <h3 style="margin-bottom: 5px;">${escapeHtml(res.name)}</h3>
-                            <p style="color: #555;"><strong>Date:</strong> ${escapeHtml(res.date)} &nbsp;|&nbsp; <strong>Time:</strong> ${escapeHtml(res.time)}</p>
-                            <p style="color: #555; margin-top: 5px;"><strong>Party size:</strong> ${res.party_size} guests</p>
-                            <button type="button" class="btn btn-ghost" style="margin-top: 10px;" onclick="cancelReservation(${res.reservation_id}, this)">Cancel reservation</button>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h3 style="margin-bottom: 5px; color: #1e293b;">${res.name}</h3>
+                                <span style="background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Confirmed</span>
+                            </div>
+                            <p style="color: #555; margin: 4px 0;"><strong>Date:</strong> ${res.date} &nbsp;|&nbsp; <strong>Time:</strong> ${res.time}</p>
+                            <p style="color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0;">👥 <strong>Party Size:</strong> ${res.party_size} guests</p>
                         `;
                         resList.appendChild(item);
                     });
                 }
+
+                // 2. Render Completed Reservations
+                if (completedCountBadge) completedCountBadge.textContent = `${completed.length} Past`;
+                if (completedList) {
+                    completedList.innerHTML = "";
+                    if (completed.length === 0) {
+                        completedList.innerHTML = `<div class="empty-state">No completed reservations yet. Your past dining visits will appear here.</div>`;
+                    } else {
+                        completed.forEach(res => {
+                            const item = document.createElement("div");
+                            item.className = "reservation-item";
+                            item.style.borderLeft = "4px solid #10b981";
+                            item.style.background = "#f0fdf4";
+                            item.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <h3 style="margin-bottom: 5px; color: #065f46;">${res.name}</h3>
+                                    <span style="background: #d1fae5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Completed</span>
+                                </div>
+                                <p style="color: #374151; margin: 4px 0;"><strong>Dined on:</strong> ${res.date} at ${res.time}</p>
+                                <p style="color: #6b7280; font-size: 0.9rem; margin: 4px 0 0 0;">👥 <strong>Party Size:</strong> ${res.party_size} guests</p>
+                            `;
+                            completedList.appendChild(item);
+                        });
+                    }
+                }
+
             } else {
                 resList.innerHTML = `<div class="empty-state">No reservations found.</div>`;
+                if (completedList) completedList.innerHTML = `<div class="empty-state">No completed reservations found.</div>`;
             }
 
         } catch (error) {
             console.error("Dashboard error:", error);
-            
             document.getElementById("reservations-list").innerHTML = 
                 `<div class="empty-state" style="color: red;">Failed to connect to server.</div>`;
+            const completedList = document.getElementById("completed-reservations-list");
+            if (completedList) {
+                completedList.innerHTML = `<div class="empty-state" style="color: red;">Failed to load completed reservations.</div>`;
+            }
         }
     });
 

@@ -5,14 +5,12 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../database');
-const { rankByConvenience, distanceKm } = require('../utils/scoring');
+const { rankByConvenience } = require('../utils/scoring');
 const { bfsReachable, dfsPath } = require('../utils/graphSearch');
-const { findRoute, ALGORITHMS: SEARCH_ALGORITHMS } = require('../utils/informedSearch');
-const { recommend: expertRecommend, RULES } = require('../utils/expertSystem');
 const { GoogleGenAI } = require('@google/genai');
 
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
-const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 // Shared query: restaurants with their live queue length, needed by
 // both /recommended and /reachable to compute real wait estimates.
@@ -101,7 +99,7 @@ router.get('/recommended', async (req, res) => {
                 const response = await ai.models.generateContent({
                     model: geminiModel,
                     contents: prompt,
-                    config: { maxOutputTokens: 100, temperature: 0.3, thinkingConfig: { thinkingBudget: 0 } } // one sentence: no thinking, or it eats the token budget
+                    config: { maxOutputTokens: 100, temperature: 0.3 }
                 });
                 explanation = (response.text || '').trim() || null;
             } catch (explainError) {
@@ -155,93 +153,59 @@ router.get('/reachable', async (req, res) => {
     }
 });
 
-// ── GET /api/restaurant/route ────────────────────────────────────────
-// Shortest walkable-hop route to one restaurant over a WEIGHTED graph
-// (edge cost = km) — see api/utils/informedSearch.js.
-//
-// Query params: lat, lng, to (restaurant_id) — required;
-// algorithm: "astar" (default) | "ucs" | "greedy" | "compare"; walk_km.
-// "compare" runs all three on the same graph so the path cost and the
-// number of nodes each one expanded can be put side by side.
-router.get('/route', async (req, res) => {
-    const lat = parseFloat(req.query.lat);
-    const lng = parseFloat(req.query.lng);
-    const to = req.query.to;
-    const algorithm = req.query.algorithm || 'astar';
-    const walkKm = parseFloat(req.query.walk_km) || undefined;
-
-    if (Number.isNaN(lat) || Number.isNaN(lng) || !to) {
-        return res.status(400).json({ message: 'lat, lng and to (restaurant_id) query parameters are required.' });
-    }
-    if (algorithm !== 'compare' && !SEARCH_ALGORITHMS.includes(algorithm)) {
-        return res.status(400).json({ message: `algorithm must be compare or one of: ${SEARCH_ALGORITHMS.join(', ')}` });
-    }
-
+// ── GET /api/restaurant/:id/live-status ──────────────────────────────
+// Returns live restaurant details, table availability breakdown (vacant vs occupied/reserved),
+// and current waitlist count.
+// NOTE: This MUST be declared BEFORE /:id so Express doesn't swallow "live-status" as an ID.
+router.get('/:id/live-status', async (req, res) => {
+    const restaurantId = req.params.id;
     try {
-        const restaurants = await getRestaurantsWithQueueLoad();
-        const run = (a) => findRoute(lat, lng, restaurants, to, { algorithm: a, walkKm });
-
-        if (algorithm === 'compare') {
-            const results = Object.fromEntries(SEARCH_ALGORITHMS.map((a) => [a, run(a)]));
-            if (!results.astar) return res.status(404).json({ message: 'Restaurant not found or has no coordinates.' });
-            return res.json({ algorithm: 'compare', results });
+        const [restaurants] = await db.query(
+            'SELECT restaurant_id, name, location, status, latitude, longitude FROM restaurant WHERE restaurant_id = $1',
+            [restaurantId]
+        );
+        if (restaurants.length === 0) {
+            return res.status(404).json({ message: 'Restaurant not found' });
         }
+        const restaurant = restaurants[0];
 
-        const route = run(algorithm);
-        if (!route) return res.status(404).json({ message: 'Restaurant not found or has no coordinates.' });
-        res.json(route);
-    } catch (error) {
-        console.error('Error computing route:', error.message);
-        res.status(500).json({ message: 'Failed to compute route.' });
-    }
-});
+        // Fetch tables
+        const [tables] = await db.query(
+            'SELECT table_id, table_no, capacity, status FROM restaurant_tables WHERE restaurant_id = $1 ORDER BY table_no ASC',
+            [restaurantId]
+        );
 
-// ── GET /api/restaurant/expert-recommend ─────────────────────────────
-// Rule-based expert system (api/utils/expertSystem.js): live data is
-// asserted as facts, forward chaining derives a conclusion per
-// restaurant, and the response carries the full inference trail.
-//
-// Query params: party_size (default 2); lat, lng (optional — without
-// them no distance facts are asserted, so distance rules can't fire).
-router.get('/expert-recommend', async (req, res) => {
-    const partySize = parseInt(req.query.party_size, 10) || 2;
-    const lat = parseFloat(req.query.lat);
-    const lng = parseFloat(req.query.lng);
-    const hasLocation = !Number.isNaN(lat) && !Number.isNaN(lng);
+        const vacantCount = tables.filter(t => t.status === 'vacant').length;
+        const occupiedCount = tables.filter(t => t.status === 'occupied').length;
+        const reservedCount = tables.filter(t => t.status === 'reserved').length;
+        const unavailableCount = tables.filter(t => t.status === 'unavailable').length;
 
-    try {
-        const restaurants = await getRestaurantsWithQueueLoad();
-        const [tableRows] = await db.query(`
-            SELECT restaurant_id,
-                   COALESCE(array_agg(capacity) FILTER (WHERE status = 'vacant'), '{}') AS vacant_capacities,
-                   array_agg(capacity) AS all_capacities
-            FROM restaurant_tables
-            GROUP BY restaurant_id
-        `);
-        const tablesById = Object.fromEntries(tableRows.map((t) => [t.restaurant_id, t]));
-
-        const enriched = restaurants.map((r) => ({
-            restaurant_id: r.restaurant_id,
-            name: r.name,
-            location: r.location,
-            latitude: r.latitude,
-            longitude: r.longitude,
-            waiting_count: parseInt(r.waiting_count, 10) || 0,
-            vacant_capacities: tablesById[r.restaurant_id]?.vacant_capacities || [],
-            all_capacities: tablesById[r.restaurant_id]?.all_capacities || [],
-            distance_km: hasLocation && r.latitude != null
-                ? Math.round(distanceKm(lat, lng, parseFloat(r.latitude), parseFloat(r.longitude)) * 100) / 100
-                : null
-        }));
+        // Fetch live wait count (waiting queue entries)
+        const [queueCountResult] = await db.query(
+            "SELECT COUNT(*) AS waiting_count FROM queue WHERE restaurant_id = $1 AND status = 'waiting'",
+            [restaurantId]
+        );
+        const waitingCount = parseInt(queueCountResult[0]?.waiting_count || 0, 10);
+        const estimatedWaitMinutes = waitingCount * 5;
 
         res.json({
-            party_size: partySize,
-            rules: RULES.map((r) => ({ id: r.id, if: r.if, then: r.then, text: r.text })),
-            recommendations: expertRecommend(enriched, partySize)
+            restaurant,
+            tables: {
+                total: tables.length,
+                vacant: vacantCount,
+                occupied: occupiedCount,
+                reserved: reservedCount,
+                unavailable: unavailableCount,
+                occupied_or_reserved: occupiedCount + reservedCount
+            },
+            queue: {
+                waiting_count: waitingCount,
+                estimated_wait_minutes: estimatedWaitMinutes
+            }
         });
     } catch (error) {
-        console.error('Error running expert recommender:', error.message);
-        res.status(500).json({ message: 'Failed to compute recommendations.' });
+        console.error('Error fetching live restaurant status:', error);
+        res.status(500).json({ message: 'Failed to fetch live restaurant status.' });
     }
 });
 
@@ -260,3 +224,4 @@ router.get('/:id', async (req, res) => {
 });
 
 module.exports = router;
+

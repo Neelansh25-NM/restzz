@@ -7,7 +7,7 @@
     
       <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -144,7 +144,8 @@
 
 
         .sidebar {
-            width: 350px;
+            width: 390px;
+            max-width: 95vw;
             background: white;
             border-right: 1px solid #e1e8ed;
             padding: 20px;
@@ -152,101 +153,195 @@
             flex-direction: column;
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
             z-index: 1000;
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Custom scrollbar styling for smooth scrolling on macOS and trackpads */
+        .sidebar::-webkit-scrollbar,
+        .restaurant-list::-webkit-scrollbar,
+        .detail-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-thumb,
+        .restaurant-list::-webkit-scrollbar-thumb,
+        .detail-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .restaurant-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         .sidebar h2 {
-            font-size: 1.5rem;
-            color: #333;
+            font-size: 1.4rem;
+            color: #1e293b;
             margin-bottom: 15px;
         }
 
         .filter-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .filter-group label {
             display: block;
-            font-size: 0.9rem;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: 500;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 4px;
+            font-weight: 600;
         }
 
         .filter-group select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.95rem;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
             outline-color: #3178c6;
+            background: #f8fafc;
         }
 
         .restaurant-list {
             flex: 1;
             overflow-y: auto;
-            margin-top: 15px;
-            padding-right: 5px;
+            margin-top: 10px;
+            padding-right: 4px;
         }
 
-        /* Recommended for you */
-        .reco { margin-bottom: 18px; padding: 14px; border: 1px solid #dfeaf5; border-radius: 12px; background: #f8fbff; }
-        .reco-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
-        .reco-head strong { color: #3178c6; white-space: nowrap; }
-        .reco-head select { flex: 0 0 auto; width: auto; min-width: 96px; padding: 5px 6px; border: 1px solid #ccc; border-radius: 6px; font: inherit; font-size: .85rem; }
-        .reco-muted { color: #667085; font-size: .82rem; margin: 6px 0; }
-        .reco-item { border-top: 1px solid #e7edf3; padding: 10px 0 8px; }
-        .reco-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .reco-name { font-weight: 600; color: #1a1a1a; }
-        .reco-tag { flex: 0 0 auto; padding: 2px 8px; border-radius: 999px; background: #eef2f6; color: #555; font-size: .72rem; font-weight: 700; }
-        .reco-item.recommend_strongly .reco-tag { background: #3178c6; color: #fff; }
-        .reco-item.recommend .reco-tag { background: #dcebfa; color: #245ea3; }
-        .reco-item.avoid .reco-tag { background: #fdecea; color: #b3261e; }
-        .reco-points { list-style: none; margin: 6px 0 8px; padding: 0; font-size: .82rem; color: #444; }
-        .reco-points li { margin: 2px 0; padding-left: 18px; position: relative; }
-        .reco-points li::before { content: "•"; position: absolute; left: 4px; color: #98a2b3; }
-        .reco-points li.good::before { content: "✓"; color: #1f7a45; left: 2px; }
-        .reco-points li.bad::before { content: "✕"; color: #b3261e; left: 2px; }
-        .reco-actions { display: flex; gap: 6px; }
-        .reco-actions button { padding: 5px 10px; border: 1px solid #3178c6; border-radius: 6px; background: #fff; color: #3178c6; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
-        .reco-actions button:first-child { background: #3178c6; color: #fff; }
-
         .restaurant-card {
-            border: 1px solid #e1e8ed;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             cursor: pointer;
             transition: all 0.2s;
+            background: #ffffff;
         }
 
         .restaurant-card:hover {
             border-color: #3178c6;
-            background: #f4f7f9;
+            background: #f8faff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(49, 120, 198, 0.08);
         }
 
         .restaurant-card h3 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #3178c6;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .restaurant-card p {
             font-size: 0.85rem;
-            color: #666;
+            color: #64748b;
             margin-bottom: 8px;
+        }
+
+        /* Selected Restaurant Detail Panel in Sidebar */
+        .detail-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding-bottom: 20px;
+        }
+
+        .back-to-list-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 6px;
+            align-self: flex-start;
+        }
+
+        .back-to-list-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-vacant {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .stat-vacant .stat-val {
+            color: #16a34a;
+        }
+
+        .stat-occupied {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+        .stat-occupied .stat-val {
+            color: #dc2626;
+        }
+
+        .stat-wait {
+            background: #fefce8;
+            border-color: #fef08a;
+        }
+        .stat-wait .stat-val {
+            color: #ca8a04;
+        }
+
+        .stat-travel {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .stat-travel .stat-val {
+            color: #2563eb;
         }
 
         .tables-badge {
             display: inline-block;
             background: #eef5fb;
             color: #3178c6;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            font-size: 0.75rem;
+            font-weight: 600;
             border: 1px solid #3178c6;
         }
-
 
         #map {
             flex: 1;
@@ -326,53 +421,41 @@
     </header>
 
     <main class="locations-wrapper">
-        <aside class="sidebar">
-            <h2>Find Nearby</h2>
-
-            <div class="reco">
-                <div class="reco-head">
-                    <strong>Recommended for you</strong>
-                    <select id="recoPartySize" onchange="loadRecommendations()" aria-label="Party size">
-                        <option value="1">1 guest</option>
-                        <option value="2" selected>2 guests</option>
-                        <option value="3">3 guests</option>
-                        <option value="4">4 guests</option>
-                        <option value="6">6 guests</option>
-                        <option value="8">8 guests</option>
+        <aside class="sidebar" id="sidebarContainer">
+            <div id="sidebarListSection">
+                <h2>Find Nearby</h2>
+                
+                <div class="filter-group">
+                    <label>Cuisine Type</label>
+                    <select id="cuisineFilter" onchange="applyFilters()">
+                        <option value="All">All Cuisines</option>
+                        <option value="Asian">Asian / Chinese</option>
+                        <option value="Indian">Indian / Modern Indian</option>
+                        <option value="Continental">Continental</option>
                     </select>
                 </div>
-                <div id="recommendations"><p class="reco-muted">Loading…</p></div>
-            </div>
 
-            <div class="filter-group">
-                <label>Cuisine Type</label>
-                <select id="cuisineFilter" onchange="applyFilters()">
-                    <option value="All">All Cuisines</option>
-                    <option value="Asian">Asian / Chinese</option>
-                    <option value="Indian">Indian / Modern Indian</option>
-                    <option value="Continental">Continental</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label>Distance from me</label>
-                <select id="distanceFilter" onchange="applyFilters()">
-                    <option value="none" selected>None - Show all restaurants</option>
-                    <option value="5">Within 5 km</option>
-                    <option value="3">Within 3 km</option>
-                    <option value="1">Within 1 km</option>
-                </select>
-            </div>
-
-            <div class="restaurant-list" id="restaurantList">
+                <div class="filter-group">
+                    <label>Distance from me</label>
+                    <select id="distanceFilter" onchange="applyFilters()">
+                        <option value="none" selected>None - Show all restaurants</option>
+                        <option value="5">Within 5 km</option>
+                        <option value="3">Within 3 km</option>
+                        <option value="1">Within 1 km</option>
+                    </select>
                 </div>
+
+                <div class="restaurant-list" id="restaurantList"></div>
+            </div>
+
+            <!-- Dynamic & Fully Scrollable Restaurant Detail Panel -->
+            <div id="restaurantDetailPanel" class="detail-panel" style="display: none;"></div>
         </aside>
 
         <div id="map"></div>
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/api.js"></script>
     <script>
      
         const userLocation = { lat: 19.0600, lng: 72.8350 };
@@ -409,8 +492,146 @@
         let markers = [];
         let walkingRoute;
 
+        function selectRestaurantById(id) {
+            const found = restaurants.find(r => r.id === id);
+            if (found) selectRestaurant(found);
+        }
+
+        async function selectRestaurant(res) {
+            map.flyTo([res.lat, res.lng], 16, { animate: true, duration: 0.8 });
+
+            const listSection = document.getElementById('sidebarListSection');
+            const detailPanel = document.getElementById('restaurantDetailPanel');
+            const sidebar = document.getElementById('sidebarContainer');
+
+            listSection.style.display = 'none';
+            detailPanel.style.display = 'flex';
+            sidebar.scrollTop = 0;
+
+            const walkMins = Math.max(1, Math.round((res.distance / 4.8) * 60));
+            const driveMins = Math.max(1, Math.round((res.distance / 25) * 60));
+
+            detailPanel.innerHTML = `
+                <button class="back-to-list-btn" onclick="backToRestaurantList()">
+                    &larr; Back to all restaurants
+                </button>
+                <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <h2 style="margin: 0; color: #1e293b; font-size: 1.3rem;">${res.name}</h2>
+                        <span class="tables-badge" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">Live</span>
+                    </div>
+                    <p style="color: #64748b; font-size: 0.88rem; margin: 4px 0 0 0;">
+                        🍽️ ${res.cuisine} Dining &bull; ${res.location || 'Bandra, Mumbai'}
+                    </p>
+                </div>
+                <div style="text-align: center; padding: 25px 0; color: #64748b; font-size: 0.9rem;">
+                    Loading live table & waitlist status...
+                </div>
+            `;
+
+            try {
+                let liveData = null;
+                try {
+                    const statusRes = await fetch(`http://localhost:5000/api/restaurant/${res.id}/live-status`);
+                    if (statusRes.ok) {
+                        liveData = await statusRes.json();
+                    }
+                } catch (e) {
+                    console.warn('Could not load live status, fallback to local defaults', e);
+                }
+
+                const vacant = liveData ? liveData.tables.vacant : (res.tablesAvailable ?? 4);
+                const occupied = liveData ? liveData.tables.occupied : 2;
+                const reserved = liveData ? liveData.tables.reserved : 1;
+                const waitingCount = liveData ? liveData.queue.waiting_count : 0;
+                const waitMinutes = liveData ? liveData.queue.estimated_wait_minutes : (waitingCount * 5);
+                const totalTables = liveData ? liveData.tables.total : (vacant + occupied + reserved);
+
+                detailPanel.innerHTML = `
+                    <button class="back-to-list-btn" onclick="backToRestaurantList()">
+                        &larr; Back to all restaurants
+                    </button>
+
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                            <h2 style="margin: 0; color: #1e293b; font-size: 1.3rem;">${res.name}</h2>
+                            <span class="tables-badge" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">
+                                ${res.status === 'closed' ? 'Closed' : '🟢 Open Now'}
+                            </span>
+                        </div>
+                        <p style="color: #64748b; font-size: 0.88rem; margin: 6px 0 0 0;">
+                            🍽️ ${res.cuisine} &bull; ${res.location || 'Bandra, Mumbai'}
+                        </p>
+                    </div>
+
+                    <!-- Travel & Distance Section -->
+                    <div class="stat-card stat-travel">
+                        <span class="stat-label">📍 Distance & Travel Time</span>
+                        <div class="stat-val" style="font-size: 1.05rem;">
+                            🚶 ~${walkMins} mins walk <span style="font-size: 0.85rem; font-weight: normal; color: #64748b;">(${res.distance} km)</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+                            🚗 ~${driveMins} mins by car/cab
+                        </div>
+                    </div>
+
+                    <!-- Live Wait & Table Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card stat-wait">
+                            <span class="stat-label">👥 Live Waitlist</span>
+                            <div class="stat-val">${waitingCount} <span style="font-size: 0.8rem; font-weight: normal;">parties</span></div>
+                            <span style="font-size: 0.75rem; color: #854d0e; margin-top: 2px;">
+                                ${waitingCount > 0 ? `~${waitMinutes} min wait` : 'No wait right now!'}
+                            </span>
+                        </div>
+
+                        <div class="stat-card stat-vacant">
+                            <span class="stat-label">🟢 Vacant Tables</span>
+                            <div class="stat-val">${vacant} <span style="font-size: 0.8rem; font-weight: normal;">free</span></div>
+                            <span style="font-size: 0.75rem; color: #15803d; margin-top: 2px;">
+                                Out of ${totalTables} total
+                            </span>
+                        </div>
+
+                        <div class="stat-card stat-occupied">
+                            <span class="stat-label">🔴 Occupied Tables</span>
+                            <div class="stat-val">${occupied} <span style="font-size: 0.8rem; font-weight: normal;">seated</span></div>
+                            <span style="font-size: 0.75rem; color: #b91c1c; margin-top: 2px;">Currently dining</span>
+                        </div>
+
+                        <div class="stat-card" style="background: #faf5ff; border-color: #e9d5ff;">
+                            <span class="stat-label" style="color: #7e22ce;">📅 Reserved</span>
+                            <div class="stat-val" style="color: #6b21a8;">${reserved} <span style="font-size: 0.8rem; font-weight: normal;">booked</span></div>
+                            <span style="font-size: 0.75rem; color: #9333ea; margin-top: 2px;">Upcoming today</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                        <button class="popup-btn" style="padding: 10px; font-size: 0.95rem;" onclick="window.location.href='CustomerReservation.html?restaurant_id=${res.id}'">
+                            📅 Book a Table
+                        </button>
+                        <button class="popup-btn" style="padding: 10px; font-size: 0.95rem; background: #f8f9fa; color: #3178c6; border: 1px solid #3178c6;" onclick="window.location.href='JoinQueue.html?restaurant_id=${res.id}'">
+                            🚶 Join Live Queue
+                        </button>
+                        <button class="popup-btn route-btn" style="padding: 10px; font-size: 0.95rem;" onclick='showWalkingRoute(${res.lat}, ${res.lng}, ${JSON.stringify(res.name)})'>
+                            🗺️ Draw Walking Route on Map
+                        </button>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Error rendering restaurant details:', err);
+            }
+        }
+
+        function backToRestaurantList() {
+            document.getElementById('restaurantDetailPanel').style.display = 'none';
+            document.getElementById('sidebarListSection').style.display = 'block';
+            document.getElementById('sidebarContainer').scrollTop = 0;
+            map.setView([userLocation.lat, userLocation.lng], 15);
+        }
+
         function renderData(data) {
-    
             markers.forEach(marker => map.removeLayer(marker));
             markers = [];
   
@@ -418,32 +639,37 @@
             listContainer.innerHTML = '';
 
             data.forEach(res => {
-                
+                const walkMins = Math.max(1, Math.round((res.distance / 4.8) * 60));
                 let marker = L.marker([res.lat, res.lng]).addTo(map)
                 .bindPopup(`
-                             <div class="popup-content">
-                                <h4>${escapeHtml(res.name)}</h4>
-                                 <p>${escapeHtml(res.cuisine)} &bull; ${res.distance} km away</p>
-                                 <br><br>
-                                  <div style="display: flex; gap: 8px; flex-direction: column;">
-                                    <button class="popup-btn" onclick="window.location.href='CustomerReservation.html?restaurant_id=${res.id}'">
-                                       📅 Book a Table
-                                    </button>
-                                    <button class="popup-btn" style="background: #f8f9fa; color: #3178c6; border: 1px solid #3178c6;" onclick="window.location.href='JoinQueue.html?restaurant_id=${res.id}'">
-                                        🚶 Join Live Queue
-                                    </button>
-                                    <button class="popup-btn route-btn" onclick='showWalkingRoute(${res.lat}, ${res.lng}, ${attrJson(res.name)}, ${res.id})'>
-                                        Route
-                                    </button>
-            </div>
-        </div>
-    `);
+                    <div class="popup-content">
+                        <h4>${res.name}</h4>
+                        <p>${res.cuisine} &bull; ${res.distance} km away (~${walkMins}m walk)</p>
+                        <div style="display: flex; gap: 8px; flex-direction: column; margin-top: 8px;">
+                            <button class="popup-btn" onclick="selectRestaurantById(${res.id})">
+                                📊 View Live Details & Tables
+                            </button>
+                            <button class="popup-btn" style="background: #f8f9fa; color: #3178c6; border: 1px solid #3178c6;" onclick="window.location.href='JoinQueue.html?restaurant_id=${res.id}'">
+                                🚶 Join Live Queue
+                            </button>
+                            <button class="popup-btn route-btn" onclick='showWalkingRoute(${res.lat}, ${res.lng}, ${JSON.stringify(res.name)})'>
+                                🗺️ Route
+                            </button>
+                        </div>
+                    </div>
+                `);
                 markers.push(marker);
 
                 listContainer.innerHTML += `
-                    <div class="restaurant-card" onclick="focusOnMap(${res.lat}, ${res.lng})">
-                        <h3>${escapeHtml(res.name)}</h3>
-                        <p>${escapeHtml(res.cuisine)} &bull; ${res.distance} km away</p>
+                    <div class="restaurant-card" onclick="selectRestaurantById(${res.id})">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <h3>${res.name}</h3>
+                            <span class="tables-badge">🚶 ~${walkMins}m</span>
+                        </div>
+                        <p>${res.cuisine} &bull; ${res.distance} km away</p>
+                        <div style="font-size: 0.78rem; color: #0284c7; font-weight: 600;">
+                            View live waitlist & tables &rarr;
+                        </div>
                     </div>
                 `;
             });
@@ -462,11 +688,6 @@
             });
 
             renderData(filteredData);
-        }
-
-        // 5. Allow clicking sidebar item to pan to map marker
-        function focusOnMap(lat, lng) {
-            map.flyTo([lat, lng], 17, { animate: true, duration: 1 });
         }
 
         function distanceFromUser(lat, lng) {
@@ -514,42 +735,18 @@
         }
 
         // Draw a pedestrian route from the "You are here" marker to the selected restaurant.
-        // Street directions come from OpenStreetMap routing. If that service
-        // is down, the backend plans a way there past other Q-Sense
-        // restaurants (shortest path over known locations), and only if that
-        // fails too do we fall back to a straight line.
-        async function showWalkingRoute(destinationLat, destinationLng, restaurantName, restaurantId) {
+        async function showWalkingRoute(destinationLat, destinationLng, restaurantName) {
             if (walkingRoute) {
                 map.removeLayer(walkingRoute);
             }
 
-            const straightLine = () => {
+            const fallbackRoute = () => {
                 walkingRoute = L.polyline(
                     [[userLocation.lat, userLocation.lng], [destinationLat, destinationLng]],
                     { color: '#3178c6', weight: 5, opacity: 0.85, dashArray: '8 8' }
                 ).addTo(map);
                 map.fitBounds(walkingRoute.getBounds(), { padding: [40, 40] });
-                toast(`Walking directions are unavailable right now. Showing the direct line to ${restaurantName}.`);
-            };
-
-            const viaRestaurants = async () => {
-                if (restaurantId == null) return false;
-                const res = await fetch(`http://localhost:5000/api/restaurant/route?lat=${userLocation.lat}&lng=${userLocation.lng}&to=${restaurantId}&walk_km=5`);
-                if (!res.ok) return false;
-                const route = await res.json();
-                if (!route.found || route.hops < 2) return false; // a single hop is just the straight line
-
-                walkingRoute = L.polyline(route.path.map((p) => [p.lat, p.lng]), {
-                    color: '#3178c6', weight: 5, opacity: 0.85, dashArray: '2 8'
-                }).addTo(map);
-                map.fitBounds(walkingRoute.getBounds(), { padding: [40, 40] });
-                const stops = route.path.slice(1, -1).map((p) => escapeHtml(p.name)).join(', then ');
-                walkingRoute.bindPopup(`
-                    <div class="popup-content">
-                        <h4>Getting to ${escapeHtml(restaurantName)}</h4>
-                        <p>Street directions aren't available right now. Head for ${stops}, then on to ${escapeHtml(restaurantName)}: about ${route.distance_km.toFixed(1)} km.</p>
-                    </div>`).openPopup();
-                return true;
+                alert(`Walking directions are unavailable right now. Showing the direct path to ${restaurantName}.`);
             };
 
             try {
@@ -570,62 +767,13 @@
                 map.fitBounds(walkingRoute.getBounds(), { padding: [40, 40] });
             } catch (error) {
                 console.warn('Walking route could not be loaded:', error);
-                try {
-                    if (!(await viaRestaurants())) straightLine();
-                } catch (fallbackError) {
-                    console.warn('Route via restaurants unavailable:', fallbackError);
-                    straightLine();
-                }
-            }
-        }
-
-        // ── Recommended for you ──────────────────────────────────────────
-        // The backend's rules weigh free tables that fit the party, the
-        // queue, and distance; each pick comes with the reasons behind it.
-        const PICK_LABEL = {
-            recommend_strongly: 'Best right now',
-            recommend: 'Good option',
-            consider: 'Maybe',
-            avoid: 'Not ideal'
-        };
-
-        async function loadRecommendations() {
-            const box = document.getElementById('recommendations');
-            const partySize = document.getElementById('recoPartySize').value;
-            box.innerHTML = '<p class="reco-muted">Finding the best spots…</p>';
-            try {
-                const res = await fetch(`http://localhost:5000/api/restaurant/expert-recommend?party_size=${partySize}&lat=${userLocation.lat}&lng=${userLocation.lng}`);
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Recommendation failed');
-                const top = data.recommendations.slice(0, 3);
-                if (!top.length) {
-                    box.innerHTML = '<p class="reco-muted">No restaurants are open right now.</p>';
-                    return;
-                }
-                box.innerHTML = top.map((r) => `
-                    <div class="reco-item ${r.conclusion}">
-                        <div class="reco-top">
-                            <span class="reco-name">${escapeHtml(r.name)}</span>
-                            <span class="reco-tag">${PICK_LABEL[r.conclusion]}</span>
-                        </div>
-                        <ul class="reco-points">
-                            ${r.highlights.map((h) => `<li class="${h.good === true ? 'good' : h.good === false ? 'bad' : ''}">${escapeHtml(h.text)}</li>`).join('')}
-                        </ul>
-                        <div class="reco-actions">
-                            <button type="button" onclick="window.location.href='JoinQueue.html?restaurant_id=${r.restaurant_id}'">Join queue</button>
-                            ${r.latitude != null ? `<button type="button" onclick='showWalkingRoute(${Number(r.latitude)}, ${Number(r.longitude)}, ${attrJson(r.name)}, ${r.restaurant_id})'>Route</button>` : ''}
-                        </div>
-                    </div>`).join('');
-            } catch (error) {
-                console.warn('Recommendations unavailable:', error);
-                box.innerHTML = '<p class="reco-muted">Recommendations are unavailable right now.</p>';
+                fallbackRoute();
             }
         }
 
         // Initial render on page load
         renderData(restaurants);
         loadRegisteredRestaurants();
-        loadRecommendations();
 
 
     const profileToggle = document.getElementById('profileToggle');
@@ -667,7 +815,7 @@
 
     try{
 
-        const res = await fetch(`http://localhost:5000/api/users/${userId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` } });
+        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
         const data = await res.json();
 
         const name = data.name || 'Profile';
@@ -682,7 +830,7 @@
 });
     </script>
 
-    <div id="qsense-chatbot" style="position: fixed; right: 22px; bottom: 22px; z-index: 9999; font-family: var(--font-sans);">
+    <div id="qsense-chatbot" style="position: fixed; right: 22px; bottom: 22px; z-index: 9999; font-family: 'Inter', sans-serif;">
         <button id="chatbot-toggle" type="button" style="width: 64px; height: 64px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3178c6, #245ea3); color: white; font-size: 28px; box-shadow: 0 12px 30px rgba(49,120,198,0.35); cursor: pointer;">💬</button>
         <div id="chatbot-panel" style="display: none; width: 340px; max-width: calc(100vw - 24px); background: white; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.14); border: 1px solid #e7edf3; overflow: hidden; margin-bottom: 12px;">
             <div style="padding: 14px 16px; background: #3178c6; color: white; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
