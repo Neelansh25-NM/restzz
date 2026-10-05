@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Sense | My Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+     
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-links a { text-decoration: none; color: #555; font-weight: 500; transition: 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: #3178c6; }
+        .profile-menu { position: relative; }
+        .profile-toggle {
+            display: inline-flex; align-items: center; gap: 10px; border: 1px solid #dfeaf5; background: white;
+            color: #1a1a1a; border-radius: 999px; padding: 8px 14px; cursor: pointer; font-weight: 600;
+        }
+        .profile-toggle #navUserInitial {
+            display: inline-flex; width: 26px; height: 26px; border-radius: 50%; background: #3178c6; color: white;
+            align-items: center; justify-content: center; font-size: 0.8rem;
+        }
+        .caret { font-size: 0.8rem; color: #666; }
+        .profile-dropdown {
+            position: absolute; right: 0; top: calc(100% + 8px); background: white; border: 1px solid #e7edf3; border-radius: 12px;
+            min-width: 180px; box-shadow: 0 15px 30px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .profile-dropdown.hidden { display: none; }
+        .profile-dropdown a { padding: 12px 14px; text-decoration: none; color: #333; border-bottom: 1px solid #eef3f8; }
+        .profile-dropdown a:last-child { color: #d9534f; border-bottom: none; }
+
+        .profile-card, .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: #3178c6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .profile-details p {
+            margin: 10px 0;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dash-btn {
+            background: #f8f9fc;
+            border: 2px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
+
+        .dash-btn:hover {
+            border-color: #3178c6;
+            background: #f0f7ff;
+            transform: translateY(-2px);
+        }
+
+        .dash-btn h3 {
+            margin-bottom: 10px;
+            color: #3178c6;
+        }
+
+        .reservation-item {
+            border-left: 4px solid #3178c6;
+            background: #f8f9fc;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+            font-style: italic;
+            background: #f8f9fc;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="icon">🍴</span>
+            <h1>Q-Sense</h1>
+        </a>
+        <nav class="nav-links">
+            <a href="CustomerHome.html">Home</a>
+            <a href="CustomerDashboard.html" class="active">Dashboard</a>
+            <a href="locations.html">Locations</a>
+            <a href="CustomerReservation.html">Reservation</a>
+        </nav>
+        <div class="profile-menu">
+            <button id="profileToggle" class="profile-toggle" type="button" aria-expanded="false">
+                <span id="navUserInitial">U</span>
+                <span id="navUserName">Profile</span>
+                <span class="caret">▾</span>
+            </button>
+            <div id="profileDropdown" class="profile-dropdown hidden">
+                <a href="CustomerDashboard.html">My Profile</a>
+                <a href="CustomerReservation.html">My Reservations</a>
+                <a href="#" id="logoutCustomer">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <aside>
+            <div class="profile-card">
+                <div class="profile-avatar" id="user-initial">?</div>
+                <h2 id="user-name">Loading...</h2>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                <div class="profile-details">
+                    <p><strong>Email:</strong> <span id="user-email">...</span></p>
+                    <p><strong>Phone:</strong> <span id="user-phone">...</span></p>
+                    <p><strong>Status:</strong> <span style="color: green;">ONLINE</span></p>
+                </div>
+            </div>
+        </aside>
+
+        <section>
+            <div class="action-buttons-grid">
+                <a href="locations.html" class="dash-btn">
+                    <h3>Join Live Queue</h3>
+                    <p>Walk-in right now? Get in line virtually before you arrive through our dynamic map!</p>
+                </a>
+                <a href="CustomerReservation.html" class="dash-btn">
+                    <h3> Book a Table</h3>
+                    <p>Planning ahead? Secure your spot for a future date and time.</p>
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📅</span> Upcoming Reservations
+                    </h2>
+                    <span id="upcoming-count" style="background: #eef5fb; color: #3178c6; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;">0 Active</span>
+                </div>
+                
+                <div id="reservations-list">
+                    <div class="empty-state">Loading your schedule...</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card" style="margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>🍽️</span> Completed Reservations
+                    </h2>
+                    <span id="completed-count" style="background: #f1f5f9; color: #475569; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;">0 Past</span>
+                </div>
+                
+                <div id="completed-reservations-list">
+                    <div class="empty-state">Loading your dining history...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="qsense-chatbot" style="position: fixed; right: 22px; bottom: 22px; z-index: 9999; font-family: 'Inter', sans-serif;">
+        <button id="chatbot-toggle" type="button" style="width: 64px; height: 64px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3178c6, #245ea3); color: white; font-size: 28px; box-shadow: 0 12px 30px rgba(49,120,198,0.35); cursor: pointer;">💬</button>
+        <div id="chatbot-panel" style="display: none; width: 340px; max-width: calc(100vw - 24px); background: white; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.14); border: 1px solid #e7edf3; overflow: hidden; margin-bottom: 12px;">
+            <div style="padding: 14px 16px; background: #3178c6; color: white; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
+                <span>Q-Sense Assistant</span>
+                <button id="chatbot-close" type="button" style="background: transparent; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">×</button>
+            </div>
+            <div id="chatbot-messages" style="height: 260px; overflow-y: auto; padding: 14px; background: #f7fafd; display: flex; flex-direction: column; gap: 10px;">
+                <div style="max-width: 82%; background: white; border: 1px solid #e5ecf3; border-radius: 12px 12px 12px 4px; padding: 10px 12px; color: #334; font-size: 0.92rem;">Hi! Ask about reservations, queues, table availability, or restaurant info.</div>
+            </div>
+            <form id="chatbot-form" style="display: flex; border-top: 1px solid #e7edf3; padding: 10px; background: white; gap: 8px;">
+                <input id="chatbot-input" type="text" placeholder="Ask about bookings or queues..." style="flex: 1; border: 1px solid #dfeaf5; border-radius: 10px; padding: 10px 12px; font-size: 0.92rem; outline: none;" />
+                <button type="submit" style="background: #3178c6; color: white; border: none; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer;">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Q-Sense Inc. &bull; <a href="#">Privacy</a> &bull; <a href="#">Terms</a></p>
+    </footer>
+
+   <script>
+const profileToggle = document.getElementById('profileToggle');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const logoutCustomerLink = document.getElementById('logoutCustomer');
+
+        function populateProfileMenu() {
+            const name = localStorage.getItem('customer_name') || localStorage.getItem('customer_email') || 'User';
+            const firstLetter = name.trim().charAt(0).toUpperCase() || 'U';
+            document.getElementById('navUserInitial').textContent = firstLetter;
+            document.getElementById('navUserName').textContent = name.split(' ')[0] || 'Profile';
+        }
+
+        profileToggle.addEventListener('click', () => {
+            profileDropdown.classList.toggle('hidden');
+            profileToggle.setAttribute('aria-expanded', profileDropdown.classList.contains('hidden') ? 'false' : 'true');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.profile-menu')) {
+                profileDropdown.classList.add('hidden');
+                profileToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        logoutCustomerLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            localStorage.clear();
+            window.location.href = 'CustomerLogin.html';
+        });
+
+        populateProfileMenu();
+
+        document.addEventListener("DOMContentLoaded", async () => {
+        const customerId = localStorage.getItem("customer_id");
+        const customerEmail = localStorage.getItem("email");
+        const customerPhone = localStorage.getItem("phone");
+
+       
+        if (!customerId || customerId === "undefined" || customerId === "null") {
+           
+            localStorage.removeItem("customer_id"); 
+            window.location.href = "CustomerLogin.html";
+            return;
+        }
+
+   
+        try {
+         
+            const userRes = await fetch(`http://localhost:5000/api/users/${customerId}`);
+            
+          
+            if (!userRes.ok) {
+                localStorage.clear();
+                window.location.href = "CustomerLogin.html";
+                return;
+            }
+
+            const userData = await userRes.json();
+            
+            document.getElementById("user-name").textContent = userData.name;
+            document.getElementById("user-email").textContent = userData.email;
+            document.getElementById("user-phone").textContent = userData.phone;
+            document.getElementById("user-initial").textContent = userData.name.charAt(0).toUpperCase();
+
+            
+            const resList = document.getElementById("reservations-list");
+            const completedList = document.getElementById("completed-reservations-list");
+            const upcomingCountBadge = document.getElementById("upcoming-count");
+            const completedCountBadge = document.getElementById("completed-count");
+
+            const revRes = await fetch(`http://localhost:5000/api/reservations/user/${customerId}`);
+            
+            if(revRes.ok) {
+                const data = await revRes.json();
+                console.log("My Reservations Data:", data);
+
+                // Handle both unified { upcoming, completed } object and fallback array
+                const upcoming = data.upcoming || (Array.isArray(data) ? data.filter(r => r.status === 'reserved') : []);
+                const completed = data.completed || (Array.isArray(data) ? data.filter(r => r.status !== 'reserved') : []);
+
+                // 1. Render Upcoming Reservations
+                if (upcomingCountBadge) upcomingCountBadge.textContent = `${upcoming.length} Active`;
+                resList.innerHTML = "";
+
+                if (upcoming.length === 0) {
+                    resList.innerHTML = `
+                        <div class="empty-state">
+                            <p style="margin: 0 0 10px 0;">You have no active upcoming reservations.</p>
+                            <a href="CustomerReservation.html" style="color: #3178c6; font-weight: 600; text-decoration: none;">📅 Book a table now &rarr;</a>
+                        </div>`;
+                } else {
+                    upcoming.forEach(res => {
+                        const item = document.createElement("div");
+                        item.className = "reservation-item";
+                        item.style.borderLeft = "4px solid #3178c6";
+                        item.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h3 style="margin-bottom: 5px; color: #1e293b;">${res.name}</h3>
+                                <span style="background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Confirmed</span>
+                            </div>
+                            <p style="color: #555; margin: 4px 0;"><strong>Date:</strong> ${res.date} &nbsp;|&nbsp; <strong>Time:</strong> ${res.time}</p>
+                            <p style="color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0;">👥 <strong>Party Size:</strong> ${res.party_size} guests</p>
+                        `;
+                        resList.appendChild(item);
+                    });
+                }
+
+                // 2. Render Completed Reservations
+                if (completedCountBadge) completedCountBadge.textContent = `${completed.length} Past`;
+                if (completedList) {
+                    completedList.innerHTML = "";
+                    if (completed.length === 0) {
+                        completedList.innerHTML = `<div class="empty-state">No completed reservations yet. Your past dining visits will appear here.</div>`;
+                    } else {
+                        completed.forEach(res => {
+                            const item = document.createElement("div");
+                            item.className = "reservation-item";
+                            item.style.borderLeft = "4px solid #10b981";
+                            item.style.background = "#f0fdf4";
+                            item.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <h3 style="margin-bottom: 5px; color: #065f46;">${res.name}</h3>
+                                    <span style="background: #d1fae5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Completed</span>
+                                </div>
+                                <p style="color: #374151; margin: 4px 0;"><strong>Dined on:</strong> ${res.date} at ${res.time}</p>
+                                <p style="color: #6b7280; font-size: 0.9rem; margin: 4px 0 0 0;">👥 <strong>Party Size:</strong> ${res.party_size} guests</p>
+                            `;
+                            completedList.appendChild(item);
+                        });
+                    }
+                }
+
+            } else {
+                resList.innerHTML = `<div class="empty-state">No reservations found.</div>`;
+                if (completedList) completedList.innerHTML = `<div class="empty-state">No completed reservations found.</div>`;
+            }
+
+        } catch (error) {
+            console.error("Dashboard error:", error);
+            document.getElementById("reservations-list").innerHTML = 
+                `<div class="empty-state" style="color: red;">Failed to connect to server.</div>`;
+            const completedList = document.getElementById("completed-reservations-list");
+            if (completedList) {
+                completedList.innerHTML = `<div class="empty-state" style="color: red;">Failed to load completed reservations.</div>`;
+            }
+        }
+    });
+
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotPanel = document.getElementById('chatbot-panel');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotForm = document.getElementById('chatbot-form');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+
+    function appendChatbotMessage(text, isUser = false) {
+        const bubble = document.createElement('div');
+        bubble.style.maxWidth = '82%';
+        bubble.style.padding = '10px 12px';
+        bubble.style.borderRadius = isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px';
+        bubble.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+        bubble.style.background = isUser ? '#3178c6' : '#ffffff';
+        bubble.style.color = isUser ? '#fff' : '#2e3a46';
+        bubble.style.border = isUser ? 'none' : '1px solid #e5ecf3';
+        bubble.style.fontSize = '0.92rem';
+        bubble.textContent = text;
+        chatbotMessages.appendChild(bubble);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    chatbotToggle.addEventListener('click', () => {
+        chatbotPanel.style.display = chatbotPanel.style.display === 'none' ? 'block' : 'none';
+    });
+
+    chatbotClose.addEventListener('click', () => {
+        chatbotPanel.style.display = 'none';
+    });
+
+    chatbotForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = chatbotInput.value.trim();
+        if (!message) return;
+
+        appendChatbotMessage(message, true);
+        chatbotInput.value = '';
+
+        try {
+            const customerId = localStorage.getItem('customer_id');
+            const response = await fetch('http://localhost:5000/api/chatbots/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+                },
+                body: JSON.stringify({ message, userId: customerId })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'The assistant could not answer right now.');
+            appendChatbotMessage(data.reply || 'I can help with reservations, queues, and restaurant info only.', false);
+        } catch (error) {
+            console.error('Chatbot request failed:', error);
+            appendChatbotMessage('The assistant is unavailable right now. Please check the backend and Gemini API key.', false);
+        }
+    });
+
+</script>
+    <script src="js/navigation.js"></script>
+</body>
+</html>

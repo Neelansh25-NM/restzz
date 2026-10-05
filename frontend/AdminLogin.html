@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Sense | Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="brand">🍴 Q-Sense</a>
+        <nav>
+            <a href="index.html">Dashboard</a>
+            <a href="AdminTableManagement.html">Tables</a>
+            <div class="admin-profile">
+                <div class="avatar"></div>
+                <span>Restaurant Admin</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <h2>Admin Portal — Q-Sense</h2>
+
+            <!-- FLOW D: No OTP on admin login. Pure password + JWT. -->
+            <form id="adminLogin">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Admin Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <div class="action-row">
+                    <button type="submit" id="loginBtn" class="login-btn">Log In</button>
+                    <div class="links">
+                        <a href="ForgotPassword.html?role=admin">Forgot Password?</a>
+                        <a href="AdminSignUp.html">Create Account</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Q-Sense Inc. &bull; <a href="#">Privacy</a> &bull; <a href="#">Terms</a></p>
+    </footer>
+
+    <script>
+    document.getElementById("adminLogin").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const btn      = document.getElementById("loginBtn");
+
+        btn.textContent = "Logging in...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch("http://localhost:5000/api/admin/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // FLOW D: Direct to dashboard — no OTP step at login
+                localStorage.setItem("admin_id",       data.admin_id);
+                localStorage.setItem("restaurant_id",  data.restaurant_id);
+                localStorage.setItem("role",           data.role);
+                localStorage.setItem("auth_token",     data.token);
+                // Clear any stale temp keys from old flow
+                localStorage.removeItem("temp_admin_id");
+                localStorage.removeItem("temp_restaurant_id");
+                localStorage.removeItem("temp_email");
+                localStorage.removeItem("temp_role");
+
+                window.location.href = "AdminDashboard.html";
+
+            } else if (res.status === 403 && data.requires_otp) {
+                // Admin account not yet verified — send to OTP page
+                alert("Account not yet verified. A verification code will be sent to your email.");
+                localStorage.setItem("temp_email", data.email);
+                localStorage.setItem("temp_role",  "admin");
+
+                await fetch("http://localhost:5000/api/send-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: data.email, role: "admin" })
+                });
+
+                window.location.href = "OtpVerification.html";
+
+            } else {
+                alert(data.message || "Login failed. Check your credentials.");
+                btn.textContent = "Log In";
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Admin Login error:", error);
+            alert("A network error occurred.");
+            btn.textContent = "Log In";
+            btn.disabled = false;
+        }
+    });
+    </script>
+
+    <script src="js/navigation.js"></script>
+</body>
+</html>

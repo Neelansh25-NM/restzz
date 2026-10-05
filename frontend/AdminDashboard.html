@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Sense Admin | Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body.admin-dashboard-page { background-color: #f4f7f9; display: grid; grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: 100vh; overflow: hidden; }
+
+    
+        .top-nav { grid-column: 1 / -1; grid-row: 1; background: white; border-bottom: 1px solid #e1e8ed; display: flex; justify-content: space-between; align-items: center; padding: 14px 30px; }
+        .brand { color: #3178c6; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .nav-links { display: flex; align-items: center; gap: 26px; }
+        .nav-links a { text-decoration: none; color: #555; font-weight: 600; }
+        .nav-links a:hover, .nav-links a.active { color: #3178c6; }
+        .profile-menu { position: relative; }
+        .profile-toggle { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #dfeaf5; background: white; color: #1a1a1a; border-radius: 999px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+        .profile-toggle #navUserInitial { display: inline-flex; width: 26px; height: 26px; border-radius: 50%; background: #3178c6; color: white; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .caret { font-size: 0.8rem; color: #666; }
+        .profile-dropdown { position: absolute; right: 0; top: calc(100% + 8px); background: white; border: 1px solid #e7edf3; border-radius: 12px; min-width: 180px; box-shadow: 0 15px 30px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; }
+        .profile-dropdown.hidden { display: none; }
+        .profile-dropdown a { padding: 12px 14px; text-decoration: none; color: #333; border-bottom: 1px solid #eef3f8; }
+        .profile-dropdown a:last-child { color: #d9534f; border-bottom: none; }
+
+        .sidebar { grid-column: 1; grid-row: 2; min-width: 0; background: #fff; border-right: 1px solid #e1e8ed; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #e1e8ed; }
+        .sidebar-header h1 { color: #3178c6; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        
+        .admin-profile { padding: 20px; border-bottom: 1px solid #e1e8ed; background: #f8fbff; }
+        .admin-profile h3 { font-size: 1.1rem; color: #333; word-wrap: break-word;}
+        .admin-profile p { font-size: 0.85rem; color: #666; margin-top: 5px; }
+        .badge { display: inline-block; background: #3178c6; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; margin-top: 8px; }
+
+        .nav-menu { padding: 15px 0; flex: 1; display: flex; flex-direction: column; align-items: stretch; }
+        .nav-item { padding: 12px 20px; color: #555; text-decoration: none; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover { background: #f4f7f9; color: #3178c6; }
+        .nav-item.active { background: #eef5fb; color: #3178c6; border-right: 4px solid #3178c6; }
+        
+        .logout-btn { margin: 20px; padding: 10px; text-align: center; background: #fff; border: 1px solid #d9534f; color: #d9534f; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .logout-btn:hover { background: #d9534f; color: white; }
+
+        .main-content { grid-column: 2; grid-row: 2; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { background: #fff; padding: 20px 30px; border-bottom: 1px solid #e1e8ed; display: flex; justify-content: space-between; align-items: center; }
+        .topbar h2 { color: #333; font-weight: 600; }
+        
+        .content-section { padding: 30px; display: none; } 
+        .content-section.active { display: block; } 
+
+        .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e1e8ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .reservation-management-list { display: grid; gap: 12px; }
+        .reservation-management-item { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 16px; border: 1px solid #e1e8ed; border-radius: 8px; background: #fbfdff; }
+        .reservation-management-item h3 { margin: 0 0 6px; color: #3178c6; font-size: 1rem; }
+        .reservation-management-item p { margin: 3px 0; color: #667085; font-size: .9rem; }
+        .reservation-status { display: inline-block; margin-top: 6px; padding: 4px 8px; border-radius: 999px; background: #eef5fb; color: #3178c6; font-size: .75rem; font-weight: 700; text-transform: capitalize; }
+        .reservation-management-item a { flex: 0 0 auto; padding: 9px 12px; border-radius: 6px; background: #3178c6; color: #fff; text-decoration: none; font-weight: 600; font-size: .85rem; }
+
+        @media (max-width: 800px) {
+            .top-nav { flex-wrap: wrap; gap: 12px; padding: 12px 18px; }
+            .top-nav .nav-links { order: 3; width: 100%; justify-content: center; gap: 14px; overflow-x: auto; }
+        }
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-dashboard-page">
+
+    <header class="top-nav">
+        <a href="index.html" class="brand">🍴 Q-Sense</a>
+        <nav class="nav-links">
+            <a href="#table-management" class="active" onclick="switchTabFromTop(event, 'table-management', this)">Overview</a>
+            <a href="AdminTableManagement.html">Tables</a>
+            <a href="#reservations" onclick="switchTabFromTop(event, 'reservations', this)">Reservations</a>
+            <a href="#live-queue" onclick="switchTabFromTop(event, 'live-queue', this)">Queue</a>
+        </nav>
+        <div class="profile-menu">
+            <button id="profileToggle" class="profile-toggle" type="button" aria-expanded="false">
+                <span id="navUserInitial">A</span>
+                <span id="navUserName">Admin</span>
+                <span class="caret">▾</span>
+            </button>
+            <div id="profileDropdown" class="profile-dropdown hidden">
+                <a href="AdminDashboard.html">Profile</a>
+                <a href="AdminTableManagement.html">Table Overview</a>
+                <a href="#" id="logoutAdmin">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <aside class="sidebar">
+        
+        <div class="admin-profile">
+            <h3 id="admin-name">Loading...</h3>
+            <p id="admin-restaurant">Restaurant: Loading...</p>
+            <span class="badge" id="admin-role-badge">Store Manager</span>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="nav-item active" data-tab="table-management" onclick="switchTab('table-management', this)">
+                📊 Table Management
+            </div>
+            <div class="nav-item" data-tab="reservations" onclick="switchTab('reservations', this)">
+                📅 Reservations
+            </div>
+            <div class="nav-item" data-tab="live-queue" onclick="switchTab('live-queue', this)">
+                🚶 Live Queue
+            </div>
+        </nav>
+
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h2 id="page-title">Table Management</h2>
+            <div style="color: #666; font-size: 0.9rem;">Live System Status: <span style="color: #28a745; font-weight: bold;">Online</span></div>
+        </header>
+
+        <section id="table-management" class="content-section active">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #3178c6; margin: 0;">Pending Reservations</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="aiAllocateReservation()" style="background: #3178c6; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">🤖 AI Allocate</button>
+                        <button onclick="window.location.href='AdminTableManagement.html'" 
+                                style="background: #fff; border: 2px solid #3178c6; color: #3178c6; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;"
+                                onmouseover="this.style.background='#3178c6'; this.style.color='#fff';"
+                                onmouseout="this.style.background='#fff'; this.style.color='#3178c6';">
+                            🗺️ View Floor Plan
+                        </button>
+                    </div>
+                </div>
+                
+                <p style="color: #666; margin-bottom: 20px;">Assign incoming reservations to available tables.</p>
+                <div id="pending-reservations-list"></div>
+            </div>
+        </section>
+
+        <section id="reservations" class="content-section">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #3178c6; margin: 0;">Reservation Management</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="aiAllocateReservation()" style="background: #3178c6; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">🤖 AI Allocate Next</button>
+                        <button onclick="loadRestaurantReservations(localStorage.getItem('restaurant_id'))" style="background: #fff; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="color: #666; margin-bottom: 20px;">Review bookings, statuses, and assigned table numbers.</p>
+                <div id="restaurant-reservations-list" class="reservation-management-list"></div>
+            </div>
+        </section>
+
+        <section id="live-queue" class="content-section">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #3178c6; margin: 0;">Live Walk-in Queue</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="smartAllocateTable()" style="background: #3178c6; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">🤖 Allocate Ready Guest</button>
+                        <button onclick="loadLiveQueue(localStorage.getItem('restaurant_id'))" style="background: #fff; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; cursor: pointer;">🔄 Refresh</button>
+                    </div>
+                </div>
+                <p style="color: #666; margin-bottom: 20px;">Manage customers currently waiting for a table.</p>
+                
+                <div id="live-queue-list"></div>
+            </div>
+        </section>
+
+        <section id="contact" class="content-section">
+            <div class="card">
+                <h3 style="color: #3178c6; margin-bottom: 15px;">IT Support & Contact</h3>
+                <p style="color: #666;">Need help? Contact the Q-Sense SuperAdmin team at support@qsense.com</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+       
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            element.classList.add('active');
+            
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.getElementById('page-title').innerText = element.innerText.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim();
+        }
+
+        function switchTabFromTop(event, tabId, link) {
+            event.preventDefault();
+            const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+            if (navItem) switchTab(tabId, navItem);
+            document.querySelectorAll('.top-nav .nav-links a').forEach(item => item.classList.remove('active'));
+            link.classList.add('active');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "AdminLogin.html"; 
+        }
+
+        const profileToggle = document.getElementById('profileToggle');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const logoutAdminLink = document.getElementById('logoutAdmin');
+
+        function populateProfileMenu() {
+            const name = localStorage.getItem('admin_email') || 'Admin';
+            const firstLetter = name.trim().charAt(0).toUpperCase() || 'A';
+            document.getElementById('navUserInitial').textContent = firstLetter;
+            document.getElementById('navUserName').textContent = name.split('@')[0] || 'Admin';
+        }
+
+        profileToggle.addEventListener('click', () => {
+            profileDropdown.classList.toggle('hidden');
+            profileToggle.setAttribute('aria-expanded', profileDropdown.classList.contains('hidden') ? 'false' : 'true');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.profile-menu')) {
+                profileDropdown.classList.add('hidden');
+                profileToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        logoutAdminLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            logout();
+        });
+
+        populateProfileMenu();
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            const adminId = localStorage.getItem("admin_id");
+            const restaurantId = localStorage.getItem("restaurant_id");
+            const adminEmail = localStorage.getItem("admin_email");
+            const adminRole = localStorage.getItem("role") || "Store Manager";
+
+            if (!adminId || !restaurantId || restaurantId === "undefined") {
+                localStorage.clear();
+                window.location.href = "AdminLogin.html";
+                return;
+            }
+
+            document.getElementById("admin-name").textContent = adminEmail;
+            document.getElementById("admin-restaurant").textContent = `Restaurant ID: ${restaurantId} · Loading restaurant...`;
+            document.getElementById("admin-role-badge").textContent = adminRole.charAt(0).toUpperCase() + adminRole.slice(1);
+
+            try {
+                const restaurantRes = await fetch(`http://localhost:5000/api/restaurant/${restaurantId}`);
+                if (restaurantRes.ok) {
+                    const restaurant = await restaurantRes.json();
+                    document.getElementById("admin-restaurant").textContent = `Restaurant ID: ${restaurantId} · ${restaurant.name}`;
+                }
+            } catch (error) {
+                console.error("Restaurant lookup error:", error);
+            }
+
+            await loadPendingReservations(restaurantId);
+            await loadRestaurantReservations(restaurantId);
+            await loadLiveQueue(restaurantId);
+        });
+
+
+        async function loadPendingReservations(restaurantId) {
+            const listContainer = document.getElementById("pending-reservations-list");
+            listContainer.innerHTML = "<p style='color: #666;'>Loading requests...</p>";
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/reservations/pending/${restaurantId}`);
+                const reservations = await res.json();
+
+                if (!res.ok) {
+                    listContainer.innerHTML = `<p style='color: #d9534f; font-weight: bold;'>Backend Error: ${reservations.message || "Check your Node terminal!"}</p>`;
+                    return;
+                }
+
+                if (!Array.isArray(reservations) || reservations.length === 0) {
+                    listContainer.innerHTML = `
+                        <div style="padding: 40px 20px; background: #eef5fb; border-radius: 8px; text-align: center; border: 1px dashed #b8d4f2;">
+                            <h3 style="color: #3178c6; margin-bottom: 10px;">🎉 All caught up!</h3>
+                            <p style="color: #666; margin-bottom: 20px;">There are no unassigned reservations waiting for a table.</p>
+                            <button onclick="window.location.href='AdminTableManagement.html'" 
+                                    style="background: #3178c6; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(49,120,198,0.2);">
+                                Go to Table Management ➡
+                            </button>
+                        </div>`;
+                    return;
+                }
+
+                listContainer.innerHTML = ""; 
+
+                reservations.forEach(req => {
+                    const card = document.createElement("div");
+                    card.style.cssText = "border: 1px solid #e1e8ed; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; background: #fafcff;";
+                    
+                    card.innerHTML = `
+                        <div>
+                            <h4 style="color: #3178c6; margin-bottom: 5px; font-size: 1.1rem;">👤 ${req.customer_name}</h4>
+                            <p style="font-size: 0.9rem; color: #555;">📞 ${req.phone} &nbsp;|&nbsp; 👥 <strong>${req.group_size} Guests</strong></p>
+                            <p style="font-size: 0.9rem; color: #555; margin-top: 5px;">📅 ${req.date} &nbsp;|&nbsp; ⏰ ${req.time}</p>
+                        </div>
+                        
+                        <div>
+                            <button onclick="window.location.href='AdminTableManagement.html?reserve_id=${req.reserve_id}&party_size=${req.group_size}'" 
+                                    style="background: #3178c6; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;">
+                                ⚙️ Manage
+                            </button>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Error fetching reservations:", error);
+                listContainer.innerHTML = "<p style='color: #d9534f; font-weight: bold;'>Failed to load reservations. Check console.</p>";
+            }
+        }
+
+        async function loadRestaurantReservations(restaurantId) {
+            const list = document.getElementById('restaurant-reservations-list');
+            if (!list) return;
+            list.innerHTML = '<p style="color: #666;">Loading reservations...</p>';
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/reservations/restaurant/${restaurantId}`);
+                const reservations = await res.json();
+                if (!res.ok || !Array.isArray(reservations)) throw new Error(reservations.message || 'Failed to load reservations.');
+                if (!reservations.length) {
+                    list.innerHTML = '<div class="empty-state">No reservations found for this restaurant.</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                reservations.forEach((reservation) => {
+                    const item = document.createElement('article');
+                    item.className = 'reservation-management-item';
+                    const tableText = reservation.table_no ? `Table ${reservation.table_no}` : 'Table not assigned';
+                    const action = reservation.table_no ? '' : `<a href="AdminTableManagement.html?reserve_id=${reservation.reserve_id}&party_size=${reservation.group_size}">Allocate Table</a>`;
+                    item.innerHTML = `<div><h3>${reservation.customer_name}</h3><p>${reservation.date} at ${reservation.time} · Party of ${reservation.group_size}</p><p>${tableText}</p><span class="reservation-status">${reservation.status}</span></div>${action}`;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Reservation management error:', error);
+                list.innerHTML = `<p style="color: #d9534f;">${error.message}</p>`;
+            }
+        }
+
+        async function aiAllocateReservation() {
+            const restaurantId = localStorage.getItem('restaurant_id');
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/reservations/auto-allocate/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'AI allocation failed.');
+                if (data.allocated) {
+                    alert(`Reservation allocated to table ${data.table_no}.`);
+                    await loadRestaurantReservations(restaurantId);
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error('AI reservation allocation error:', error);
+                alert(error.message);
+            }
+        }
+
+  
+        async function loadLiveQueue(restaurantId) {
+            const listContainer = document.getElementById("live-queue-list");
+            listContainer.innerHTML = "<p style='color: #666;'>Loading queue...</p>";
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/queue/admin/${restaurantId}`);
+                const queue = await res.json();
+
+                if (!Array.isArray(queue) || queue.length === 0) {
+                    listContainer.innerHTML = `
+                        <div style="padding: 30px 20px; background: #f9fafb; border-radius: 8px; text-align: center; border: 1px dashed #ccc;">
+                            <p style="color: #666; font-weight: 500;">No one is currently in the walk-in queue.</p>
+                        </div>`;
+                    return;
+                }
+
+                listContainer.innerHTML = ""; 
+
+                queue.forEach((req, index) => {
+                    const joinTime = new Date(req.joined_at);
+                    const waitMinutes = Math.floor((new Date() - joinTime) / 60000);
+                    
+                    const isCalled = req.status === 'called';
+                    const highlightBorder = isCalled ? "border-left: 5px solid #ffc107;" : "border-left: 5px solid #3178c6;";
+
+                    const card = document.createElement("div");
+                    card.style.cssText = `border: 1px solid #e1e8ed; ${highlightBorder} padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; background: ${isCalled ? '#fffdf5' : '#fff'}; box-shadow: 0 2px 4px rgba(0,0,0,0.02);`;
+                    
+                    /* FIX 2: Fixed the broken template literal structure here */
+                    card.innerHTML = `
+                        <div>
+                            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+                                <span style="background: #eef5fb; color: #3178c6; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 0.9rem;">#${index + 1}</span>
+                                <h4 style="color: #333; margin: 0; font-size: 1.1rem;">👤 ${req.customer_name}</h4>
+                                ${isCalled ? '<span style="background: #ffc107; color: #000; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">CALLED</span>' : ''}
+                            </div>
+                            <p style="font-size: 0.9rem; color: #555;">📞 ${req.phone} &nbsp;|&nbsp; 👥 <strong>${req.group_size} Guests</strong></p>
+                            <p class="wait-time-text" style="font-size: 0.85rem; color: ${waitMinutes > 20 ? '#d9534f' : '#666'}; margin-top: 5px; font-weight: 500;">
+                                ⏱️ Waiting for <span class="live-timer" data-joined="${req.joined_at}">${waitMinutes}</span> mins
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            ${!isCalled ? 
+                                `<button onclick="updateQueueStatus(${req.queue_id}, 'called')" style="background: #f0ad4e; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🔔 Call</button>` 
+                                : ''}
+                            <button onclick="updateQueueStatus(${req.queue_id}, 'seated')" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">✅ Seated</button>
+                            <button onclick="updateQueueStatus(${req.queue_id}, 'cancelled')" style="background: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Cancel</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Error loading queue:", error);
+                listContainer.innerHTML = "<p style='color: #d9534f;'>Failed to load queue.</p>";
+            }
+        }
+
+        async function updateQueueStatus(queueId, newStatus) {
+            try {
+                const res = await fetch(`http://localhost:5000/api/queue/update/${queueId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (res.ok) {
+                    loadLiveQueue(localStorage.getItem('restaurant_id'));
+                } else {
+                    alert("Failed to update status.");
+                }
+            } catch (error) {
+                console.error("Error updating status:", error);
+            }
+        }
+
+        async function smartAllocateTable(showMessage = true) {
+            const restaurantId = localStorage.getItem('restaurant_id');
+            try {
+                const res = await fetch(`http://localhost:5000/api/queue/auto-allocate/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Auto-allocation failed.');
+                if (data.allocated) {
+                    if (showMessage) alert(`Guest allocated to table ${data.table_no}.`);
+                    await loadLiveQueue(restaurantId);
+                } else if (showMessage) {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error('Smart allocation error:', error);
+                if (showMessage) alert(error.message);
+            }
+        }
+
+     
+        setInterval(() => {
+            document.querySelectorAll('.live-timer').forEach(span => {
+                const joinTime = new Date(span.getAttribute('data-joined'));
+                const waitMinutes = Math.floor((new Date() - joinTime) / 60000);
+                
+                span.textContent = waitMinutes;
+                
+                if (waitMinutes > 20) {
+                    span.closest('.wait-time-text').style.color = '#d9534f';
+                }
+            });
+        }, 30000); 
+
+        setInterval(() => smartAllocateTable(false), 30000);
+    </script>
+    <script src="js/navigation.js"></script>
+</body>
+</html>

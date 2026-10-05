@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Sense | Admin Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="icon">🍴</span>
+            <h1>Q-Sense</h1>
+        </a>
+        <nav>
+            <a href="index.html">Home</a>
+            <div class="admin-profile">
+                <a href="AdminLogin.html" class="login-link">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <h2>Admin Account Creation</h2>
+
+            <!-- FLOW D: On success → OTP verification page, NOT AdminLogin.html -->
+            <form id="signup">
+                <div class="input-group">
+                    <input type="text" id="name" placeholder="Full Name" required>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <input type="tel" id="phone" placeholder="Phone Number" required>
+                </div>
+                <div class="input-group">
+                    <select id="restaurant_id" required>
+                        <option value="">Loading restaurants...</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <select id="role" required>
+                        <option value="">Select your role...</option>
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="confirm_password" placeholder="Confirm Password" required>
+                </div>
+                <div class="action-row">
+                    <button type="submit" id="signupBtn" class="login-btn full-width">Create Account</button>
+                    <div class="links" style="margin-top:15px;text-align:center;">
+                        <a href="AdminLogin.html">Already have an account? Log In</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Q-Sense Inc. &bull; <a href="#">Privacy</a> &bull; <a href="#">Terms</a></p>
+    </footer>
+
+    <script>
+    // Populate restaurant dropdown on page load
+        // Populate restaurant dropdown on page load
+    document.addEventListener("DOMContentLoaded", async function() {
+        try {
+            const response = await fetch("http://localhost:5000/api/restaurant");
+            const data     = await response.json();
+            const sel      = document.getElementById("restaurant_id");
+
+            if (!response.ok || !Array.isArray(data)) {
+                // Server responded but with an error object (e.g. DB
+                // unreachable) rather than an array of restaurants.
+                throw new Error(data.error || 'Server did not return a restaurant list.');
+            }
+
+            sel.innerHTML  = '<option value="">Select your Restaurant...</option>';
+            data.forEach(r => {
+                const opt       = document.createElement("option");
+                opt.value       = r.restaurant_id;
+                opt.textContent = `${r.name} (${r.location})`;
+                sel.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Error loading restaurants:", err);
+            document.getElementById("restaurant_id").innerHTML =
+                '<option value="">Error loading — is server running?</option>';
+        }
+    });
+
+    document.getElementById("signup").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const name          = document.getElementById("name").value.trim();
+        const email         = document.getElementById("email").value.trim();
+        const phone         = document.getElementById("phone").value.trim();
+        const restaurant_id = document.getElementById("restaurant_id").value;
+        const role          = document.getElementById("role").value;
+        const password      = document.getElementById("password").value;
+        const confirm       = document.getElementById("confirm_password").value;
+        const btn           = document.getElementById("signupBtn");
+
+        if (password !== confirm) { alert("Passwords do not match!"); return; }
+        if (!restaurant_id)       { alert("Please select a restaurant."); return; }
+        if (!role)                { alert("Please select a role."); return; }
+
+        btn.textContent = "Creating Account...";
+        btn.disabled    = true;
+
+        try {
+            const res  = await fetch("http://localhost:5000/api/admin/register", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json" },
+                body:    JSON.stringify({ restaurant_id, name, email, phone, password, role })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.requires_otp) {
+                // FLOW D: Account created with is_verified=false — go verify via OTP
+                localStorage.setItem("temp_email", email);
+                localStorage.setItem("temp_role",  role);
+                window.location.href = "OtpVerification.html";
+
+            } else {
+                alert("Error: " + (data.error || data.message || "Unknown error"));
+                btn.textContent = "Create Account";
+                btn.disabled    = false;
+            }
+
+        } catch (err) {
+            console.error("Signup error:", err);
+            alert("A network error occurred.");
+            btn.textContent = "Create Account";
+            btn.disabled    = false;
+        }
+    });
+    </script>
+
+    <script src="js/navigation.js"></script>
+</body>
+</html>

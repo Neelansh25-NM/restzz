@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Sense | Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="icon">🍴</span>
+            <h1>Q-Sense</h1>
+        </a>
+        <nav>
+            <a href="index.html">Home</a>
+            <div class="user-profile">
+                <div class="avatar"></div>
+                <span>Guest</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <h2>Welcome to Q-Sense</h2>
+
+            <!-- FLOW D: Login is now purely email + password. No OTP step. -->
+            <form id="login">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <div class="action-row">
+                    <button type="submit" id="loginBtn" class="login-btn">Log In</button>
+                    <div class="links">
+                        <a href="ForgotPassword.html?role=customer">Forgot Password?</a>
+                        <a href="CustomerSignUp.html">Don't have an account? Sign Up</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Q-Sense Inc. &bull; <a href="#">Privacy</a> &bull; <a href="#">Terms</a></p>
+    </footer>
+
+    <script>
+    document.getElementById("login").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const btn      = document.getElementById("loginBtn");
+
+        btn.textContent = "Logging in...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch("http://localhost:5000/api/users/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // FLOW D: Login successful — store JWT and go straight to dashboard
+                // No OTP sent, no OTP page redirect
+                localStorage.setItem("customer_id", data.customer_id);
+                localStorage.setItem("auth_token", data.token);
+                localStorage.removeItem("temp_email");
+                localStorage.removeItem("temp_role");
+                localStorage.removeItem("temp_customer_id");
+
+                window.location.href = "CustomerDashboard.html";
+
+            } else if (res.status === 403 && data.requires_otp) {
+                // FLOW D: Account exists but was never verified — send them to OTP page
+                alert("Your account is not yet verified. A new verification code will be sent.");
+                localStorage.setItem("temp_email", data.email);
+                localStorage.setItem("temp_role", "customer");
+
+                // Request a fresh OTP for the unverified account
+                await fetch("http://localhost:5000/api/send-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: data.email, role: "customer" })
+                });
+
+                window.location.href = "OtpVerification.html";
+
+            } else {
+                alert(data.message || "Login failed.");
+                btn.textContent = "Log In";
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert("A network error occurred. Please check if the server is running.");
+            btn.textContent = "Log In";
+            btn.disabled = false;
+        }
+    });
+    </script>
+
+    <script src="js/navigation.js"></script>
+</body>
+</html>
